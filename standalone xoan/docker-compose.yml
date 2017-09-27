@@ -1,0 +1,67 @@
+---
+version: '2'
+services:
+  zookeeper:
+    image: confluentinc/cp-zookeeper:3.1.2
+    hostname: zookeeper
+    ports:
+      - '32181:32181'
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 32181
+      ZOOKEEPER_TICK_TIME: 2000
+
+  kafka:
+    image: confluentinc/cp-enterprise-kafka:3.1.2
+    hostname: kafka
+    ports:
+      - '9092:9092'
+    links:
+     - "zookeeper"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:32181
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "false"
+      KAFKA_METRIC_REPORTERS: io.confluent.metrics.reporter.ConfluentMetricsReporter
+      CONFLUENT_METRICS_REPORTER_BOOTSTRAP_SERVERS: localhost:9092
+      CONFLUENT_METRICS_REPORTER_ZOOKEEPER_CONNECT: zookeeper:32181
+      ADVERTISED_HOST: kafka
+      CONFLUENT_METRICS_REPORTER_TOPIC_REPLICAS: 1
+      CONFLUENT_METRICS_ENABLE: 'true'
+      CONFLUENT_SUPPORT_CUSTOMER_ID: 'anonymous'
+
+  # This "container" is a workaround to pre-create topics
+  kafka-create-topics:
+    image: confluentinc/cp-kafka:3.1.2
+    links:
+      - "kafka"
+    hostname: kafka-create-topics
+    # We defined a dependency on "kafka", but `depends_on` will NOT wait for the
+    # dependencies to be "ready" before starting the "kafka-create-topics"
+    # container;  it waits only until the dependencies have started.  Hence we
+    # must control startup order more explicitly.
+    # See https://docs.docker.com/compose/startup-order/
+    command: "bash -c 'echo Waiting for Kafka to be ready... && \
+                       cub kafka-ready -b kafka:9092 1 20 && \
+                       kafka-topics --create --topic test --if-not-exists --zookeeper zookeeper:32181 --partitions 1 --replication-factor 1 &&
+                       kafka-topics --create --topic messenger-message-inbox --if-not-exists --zookeeper zookeeper:32181 --partitions 1 --replication-factor 1 &&
+                       kafka-configs --alter --entity-name messenger-message-inbox --entity-type topics --add-config message.timestamp.type=LogAppendTime --zookeeper zookeeper:32181 &&
+                       kafka-topics --create --topic tfl-message-processor --if-not-exists --zookeeper zookeeper:32181 --partitions 1 --replication-factor 1 &&
+                       sleep infinity'"
+
+  # This container is in charge of messenger message management
+  # Send all the message to the "messenger-message-inbox" queue
+  chatbox-messenger-app:
+    image: dataspartan/chatbox-messenger-app
+    hostname: chatbox-messenger-app
+    # delete when everything acoplated
+    network_mode: host
+    ports:
+      - '5000:5000'
+#    links:
+#      - "kafka"
+#      - "zookeeper"
+    env_file:
+      - global-env.env

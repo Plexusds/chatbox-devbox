@@ -1,0 +1,25 @@
+---
+version: '2'
+services:
+  rest-connector-tfl-tube-status:
+    image: confluentinc/cp-kafka-connect:3.1.2
+    volumes:
+      - ./dependencies/jars:/etc/kafka-connect/jars
+    ports:
+      - '8083:8083'
+    environment:
+      - CONNECT_BOOTSTRAP_SERVERS=HortonWorks21:6667
+      - CONNECT_REST_PORT=28082
+      - CONNECT_GROUP_ID=rest-connector-tfl-tube-status
+      - CONNECT_CONFIG_STORAGE_TOPIC=connector-configs-tfl-tube-status
+      - CONNECT_OFFSET_STORAGE_TOPIC=connector-offsets-tfl-tube-status
+      - CONNECT_STATUS_STORAGE_TOPIC=connector-status-tfl-tube-status
+      - CONNECT_KEY_CONVERTER=org.apache.kafka.connect.json.JsonConverter
+      - CONNECT_VALUE_CONVERTER=org.apache.kafka.connect.json.JsonConverter
+      - CONNECT_INTERNAL_KEY_CONVERTER=org.apache.kafka.connect.json.JsonConverter
+      - CONNECT_INTERNAL_VALUE_CONVERTER=org.apache.kafka.connect.json.JsonConverter
+      - CONNECT_REST_ADVERTISED_HOST_NAME=localhost
+      - CONNECT_LOG4J_ROOT_LOGLEVEL=DEBUG
+    extra_hosts:
+       - "HortonWorks21:10.20.1.21"
+       - "hortonworks21:10.20.1.21"
