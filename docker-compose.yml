@@ -23,3 +23,54 @@ services:
     extra_hosts:
        - "HortonWorks21:10.20.1.21"
        - "hortonworks21:10.20.1.21"
+       - "HortonWorks22:10.20.1.22"
+       - "hortonworks22:10.20.1.22"
+       - "HortonWorks71:10.20.1.71"
+       - "hortonworks71:10.20.1.71"
+       - "HortonWorks72:10.20.1.72"
+       - "hortonworks72:10.20.1.72"
+       - "HortonWorks81:10.20.1.81"
+       - "hortonworks81:10.20.1.81"
+
+  # This container is in charge of messenger message management
+  # Send all the message to the "messenger-message-inbox" queue
+  chatbox-messenger-app:
+    image: dataspartan/chatbox-messenger-app
+    hostname: chatbox-messenger-app
+    ports:
+      - '443:5000'
+    environment:
+      - SERVER_URL= https://horton.plexus.services
+      - CHATBOX_MESSENGER_APP_DEBUG=true
+    env_file:
+      - global-env.env
+    extra_hosts:
+       - "HortonWorks21:10.20.1.21"
+       - "hortonworks21:10.20.1.21"
+       - "HortonWorks22:10.20.1.22"
+       - "hortonworks22:10.20.1.22"
+       - "HortonWorks71:10.20.1.71"
+       - "hortonworks71:10.20.1.71"
+       - "HortonWorks72:10.20.1.72"
+       - "hortonworks72:10.20.1.72"
+       - "HortonWorks81:10.20.1.81"
+       - "hortonworks81:10.20.1.81"
+
+  # This container is in charge of messenger message management
+  # Send all the message to the "messenger-message-inbox" queue
+  chatbox-router:
+    image: dataspartan/chatbox-router
+    hostname: chatbox-router
+    env_file:
+      - global-env.env
+    extra_hosts:
+       - "HortonWorks21:10.20.1.21"
+       - "hortonworks21:10.20.1.21"
+       - "HortonWorks22:10.20.1.22"
+       - "hortonworks22:10.20.1.22"
+       - "HortonWorks71:10.20.1.71"
+       - "hortonworks71:10.20.1.71"
+       - "HortonWorks72:10.20.1.72"
+       - "hortonworks72:10.20.1.72"
+       - "HortonWorks81:10.20.1.81"
+       - "hortonworks81:10.20.1.81"
